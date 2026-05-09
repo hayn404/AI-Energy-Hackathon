@@ -6,34 +6,45 @@ import lightgbm as lgb
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 
+BASE_PARAMS = dict(
+    objective='regression',
+    learning_rate=0.01,
+    max_depth=10,
+    num_leaves=255,
+    min_child_samples=25,
+    subsample=0.85,
+    subsample_freq=1,
+    colsample_bytree=0.75,
+    reg_alpha=0.05,
+    reg_lambda=0.5,
+    random_state=42,
+    n_jobs=-1,
+    verbose=-1,
+)
+
+
 def train(df_train: pd.DataFrame,
           df_val: pd.DataFrame,
           feature_cols: list[str],
           target: str = 'load_p') -> lgb.LGBMRegressor:
-    """Train LightGBM on train, early-stop on val. Returns fitted model."""
-    params = dict(
-        objective='regression',
-        metric='rmse',
-        n_estimators=2000,
-        learning_rate=0.03,
-        max_depth=8,
-        num_leaves=63,
-        min_child_samples=50,
-        subsample=0.8,
-        colsample_bytree=0.7,
-        reg_alpha=0.1,
-        reg_lambda=1.0,
-        random_state=42,
-        n_jobs=-1,
-        verbose=-1,
-    )
-    model = lgb.LGBMRegressor(**params)
+    """Train LightGBM with early stopping on val. Returns fitted model."""
+    model = lgb.LGBMRegressor(n_estimators=5000, metric='rmse', **BASE_PARAMS)
     model.fit(
         df_train[feature_cols], df_train[target],
         eval_set=[(df_val[feature_cols], df_val[target])],
-        callbacks=[lgb.early_stopping(150, verbose=False),
-                   lgb.log_evaluation(period=200)],
+        callbacks=[lgb.early_stopping(200, verbose=False),
+                   lgb.log_evaluation(period=500)],
     )
+    return model
+
+
+def retrain_full(df_full: pd.DataFrame,
+                 feature_cols: list[str],
+                 best_iteration: int,
+                 target: str = 'load_p') -> lgb.LGBMRegressor:
+    """Retrain on the full dataset using the best_iteration from early stopping."""
+    model = lgb.LGBMRegressor(n_estimators=best_iteration, **BASE_PARAMS)
+    model.fit(df_full[feature_cols], df_full[target])
     return model
 
 

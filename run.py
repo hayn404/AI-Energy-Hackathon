@@ -13,7 +13,7 @@ import pandas as pd
 from pathlib import Path
 
 from src.data_pipeline import load_raw, fetch_weather, build_features, get_feature_cols
-from src.model        import train as train_lgbm, predict as lgbm_predict, evaluate
+from src.model        import train as train_lgbm, retrain_full, predict as lgbm_predict, evaluate
 from src.optimizer    import run_simulation
 from src.baselines    import compute_baseline_a, compute_baseline_b
 from src.evaluation   import (print_results, plot_march_week3, plot_forecast_sample,
@@ -71,8 +71,14 @@ def main():
     FEATURES_PATH = Path('results/feature_cols.pkl')
     print("\n[4/8] Training LightGBM forecaster …")
     t_train = time.time()
-    model = train_lgbm(df_tr, df_val, feature_cols)
-    print(f"  Training done in {time.time()-t_train:.1f}s  |  best_iteration={model.best_iteration_}")
+    # Step 1: early stopping on Jan–Sep train / Oct–Dec val to find best_iteration
+    model_probe = train_lgbm(df_tr, df_val, feature_cols)
+    best_iter = model_probe.best_iteration_
+    print(f"  Early-stop done in {time.time()-t_train:.1f}s  |  best_iteration={best_iter}")
+    # Step 2: retrain on all 2024 with that fixed iteration count (more data, no variance)
+    df_full_2024_clean = df_full_2024.dropna(subset=feature_cols)
+    model = retrain_full(df_full_2024_clean, feature_cols, best_iter)
+    print(f"  Retrain on full 2024 done in {time.time()-t_train:.1f}s total")
     joblib.dump(model, MODEL_PATH)
     joblib.dump(feature_cols, FEATURES_PATH)
     print(f"  Model saved to {MODEL_PATH}  |  Features saved to {FEATURES_PATH}")

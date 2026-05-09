@@ -145,17 +145,28 @@ def fetch_weather(cache_path: str = 'data/weather_sondrio.csv') -> pd.DataFrame:
 # ── Feature engineering ────────────────────────────────────────────────────────
 
 FEATURE_COLS = [
+    # Direct time slot (integer 0-95, complements sin/cos)
+    'hour_slot',
     # Cyclical time
     'hour_sin', 'hour_cos', 'dow_sin', 'dow_cos',
     'doy_sin',  'doy_cos',  'month_sin', 'month_cos',
     # Calendar
     'is_weekend', 'is_holiday',
-    # Short-term lags (most predictive for 15-min resolution)
-    'lag_1', 'lag_4', 'lag_8', 'lag_16',
-    # Medium/long lags
-    'lag_96', 'lag_672', 'lag_192', 'lag_1344',
-    # Rolling
-    'roll_mean_96', 'roll_std_96', 'roll_mean_672', 'roll_max_96',
+    # Short-term lags — fill gap between 15 min and 1 hour
+    'lag_1', 'lag_2', 'lag_3', 'lag_4', 'lag_8', 'lag_16',
+    # Intermediate lags (6h, 12h — fill gap between 4h and 24h)
+    'lag_24', 'lag_48',
+    # Long lags
+    'lag_96', 'lag_192', 'lag_672', 'lag_1344',
+    # Rolling windows — short (current activity) + long (baseline level)
+    'roll_mean_4', 'roll_mean_16', 'roll_mean_96',
+    'roll_std_96', 'roll_mean_672', 'roll_max_96',
+    # PV lags (occupancy proxy: low PV on cloudy days correlates with home presence)
+    'pv_lag_1', 'pv_lag_4', 'pv_lag_96',
+    # Momentum / rate-of-change
+    'delta_1', 'delta_4', 'delta_96', 'delta_672',
+    # Hour-of-week index (shortcut for weekday × time-of-day interactions)
+    'hour_of_week',
     # Price signal
     'buy_price',
     # Weather (added dynamically if available)
@@ -170,8 +181,11 @@ def build_features(df: pd.DataFrame, weather_df: pd.DataFrame | None = None,
     df = df.copy()
     ts = df['timestamp']
 
-    # ── Cyclical encodings ──────────────────────────────────────────────────
+    # ── Direct time slot ────────────────────────────────────────────────────
     interval = ts.dt.hour * 4 + ts.dt.minute // 15   # 0..95
+    df['hour_slot'] = interval.astype(np.float32)
+
+    # ── Cyclical encodings ──────────────────────────────────────────────────
     df['hour_sin']   = np.sin(2 * np.pi * interval / 96)
     df['hour_cos']   = np.cos(2 * np.pi * interval / 96)
     df['dow_sin']    = np.sin(2 * np.pi * ts.dt.dayofweek / 7)
@@ -185,17 +199,33 @@ def build_features(df: pd.DataFrame, weather_df: pd.DataFrame | None = None,
     df['is_weekend'] = (ts.dt.dayofweek >= 5).astype(np.float32)
     df['is_holiday'] = ts.dt.date.isin(HOLIDAYS).astype(np.float32)
 
-    # ── Lag features (no leakage — all reference past observations) ─────────
+    # ── Load lag features (no leakage) ──────────────────────────────────────
     load = df['load_p']
-    for lag in [1, 4, 8, 16, 96, 192, 672, 1344]:
+    for lag in [1, 2, 3, 4, 8, 16, 24, 48, 96, 192, 672, 1344]:
         df[f'lag_{lag}'] = load.shift(lag)
 
     # ── Rolling statistics (shift(1) before rolling avoids leakage) ─────────
     s = load.shift(1)
+    df['roll_mean_4']   = s.rolling(4).mean()    # 1-hour mean
+    df['roll_mean_16']  = s.rolling(16).mean()   # 4-hour mean
     df['roll_mean_96']  = s.rolling(96).mean()
     df['roll_std_96']   = s.rolling(96).std()
     df['roll_mean_672'] = s.rolling(672).mean()
     df['roll_max_96']   = s.rolling(96).max()
+
+    # ── PV lags (occupancy/weather proxy) ────────────────────────────────────
+    pv = df['pv_p']
+    for lag in [1, 4, 96]:
+        df[f'pv_lag_{lag}'] = pv.shift(lag)
+
+    # ── Momentum / rate-of-change features ───────────────────────────────────
+    df['delta_1']   = load.shift(1) - load.shift(2)    # 15-min momentum
+    df['delta_4']   = load.shift(1) - load.shift(5)    # 1-hour trend
+    df['delta_96']  = load.shift(1) - load.shift(97)   # deviation from yesterday
+    df['delta_672'] = load.shift(1) - load.shift(673)  # deviation from last week
+
+    # ── Hour-of-week index (0..671) ───────────────────────────────────────────
+    df['hour_of_week'] = (ts.dt.dayofweek * 96 + interval).astype(np.float32)
 
     # ── Weather ─────────────────────────────────────────────────────────────
     has_weather = (
