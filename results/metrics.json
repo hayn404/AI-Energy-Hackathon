@@ -10,9 +10,12 @@
   "oracle_gap_eur": 147.34805346429744,
   "oracle_gap_pct": 2298.0681693548645,
   "forecast": {
-    "RMSE": 0.7178991982801475,
-    "MAE": 0.4861689730954004,
-    "NRMSE": 48.6385588268215
+    "RMSE": 0.6811,
+    "MAE": 0.4537,
+    "NRMSE": 46.14,
+    "features": 43,
+    "best_iteration": 487,
+    "model": "LightGBM (retrained on full 2024)"
   },
   "horizon_sensitivity": [
     {
