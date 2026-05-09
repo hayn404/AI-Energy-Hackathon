@@ -1,0 +1,24 @@
+{
+  "test_period": {
+    "start": "2026-01-01 00:00:00",
+    "end": "2026-01-01 01:30:00",
+    "n_timesteps": 7
+  },
+  "forecast_metrics": {
+    "RMSE": 2.006,
+    "MAE": 1.6242,
+    "NRMSE": 40.12
+  },
+  "controller": {
+    "bill_eur": 0.53619,
+    "soc_start": 50.0,
+    "soc_end": 5.0,
+    "total_discharge_kwh": 6.8305,
+    "total_charge_kwh": 0.0
+  },
+  "model_info": {
+    "features": 43,
+    "model": "LightGBM retrained on full 2024",
+    "NRMSE_2025_test": 46.14
+  }
+}
