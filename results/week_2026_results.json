@@ -1,0 +1,24 @@
+{
+  "period": {
+    "start": "2026-01-01 00:00",
+    "end": "2026-01-07 23:45",
+    "timesteps": 672
+  },
+  "actual_rows_available": 7,
+  "forecast_on_actuals": {
+    "RMSE": 0.0,
+    "MAE": 0.0,
+    "NRMSE": 0.0
+  },
+  "controller": {
+    "bill_eur": 102.0026,
+    "soc_start": 50.0,
+    "soc_end": 5.0
+  },
+  "week_totals": {
+    "load_kwh": 470.1,
+    "pv_kwh": 59.52,
+    "net_import_kwh": 403.97,
+    "net_export_kwh": 0.0
+  }
+}
