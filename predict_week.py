@@ -85,7 +85,7 @@ weather_df = fetch_weather('data/weather_sondrio.csv')
 
 # ── 5. Recursive prediction ───────────────────────────────────────────────────
 print("[5] Recursive load prediction for all 672 timesteps …")
-model        = joblib.load('results/lgbm_model.pkl')
+model        = joblib.load('results/lgbm_model_2026.pkl')  # trained on 2024+2025
 feature_cols = joblib.load('results/feature_cols.pkl')
 
 # We predict in chunks to avoid rebuilding the full feature matrix every step.
@@ -170,6 +170,14 @@ out_df['is_actual']     = ([True] * n_actual + [False] * (672 - n_actual))
 
 out_df.to_csv(RESULTS / 'week_2026_predictions.csv', index=False)
 print(f"  Saved: results/week_2026_predictions.csv")
+
+# Clean forecast-only CSV (judges' submission format)
+forecast_df = pd.DataFrame({
+    'timestamp':     week_ts,
+    'load_forecast': load_predictions.round(4),
+})
+forecast_df.to_csv(RESULTS / 'week_2026_forecast.csv', index=False)
+print(f"  Saved: results/week_2026_forecast.csv")
 
 summary = {
     'period': {'start': '2026-01-01 00:00', 'end': '2026-01-07 23:45', 'timesteps': 672},
