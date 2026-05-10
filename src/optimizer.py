@@ -86,10 +86,9 @@ def mpc_step(soc: float,
     res = linprog(c, A_eq=Aeq, b_eq=beq, bounds=bounds_h, method='highs')
 
     if res.status != 0:
-        # Fallback: relax grid export limit (load spike may exceed grid cap)
+        # Fallback: relax grid import limit (load spike may exceed grid cap)
         bounds_relaxed = list(bounds_h)
-        for t in range(H):
-            # Relax P_grid+ upper bound for the energy balance row
+        for t in range(H_actual):
             bounds_relaxed[2 * H + t] = (0, max(P_GRID_MAX, float(load_fcst[t]) + 1))
         res = linprog(c, A_eq=Aeq, b_eq=beq, bounds=bounds_relaxed, method='highs')
 

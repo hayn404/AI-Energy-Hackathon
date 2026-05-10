@@ -25,13 +25,13 @@ F2 = 0.2682   # €/kWh  weekday 07:00–08:00, 19:00–23:00 | Sat 07:00–23:0
 F3 = 0.2440   # €/kWh  nights, Sundays, national holidays
 
 
-def get_italian_holidays(years=(2024, 2025)):
+def get_italian_holidays(years=(2024, 2025, 2026)):
     if HAS_HOLIDAYS:
         h = set()
         for y in years:
             h |= set(hol_lib.Italy(years=y).keys())
         return h
-    # Fallback: hard-coded 2024 + 2025
+    # Fallback: hard-coded 2024 + 2025 + 2026
     return {
         date(2024, 1, 1), date(2024, 1, 6), date(2024, 4, 1),
         date(2024, 4, 25), date(2024, 5, 1), date(2024, 6, 2),
@@ -41,6 +41,10 @@ def get_italian_holidays(years=(2024, 2025)):
         date(2025, 4, 25), date(2025, 5, 1), date(2025, 6, 2),
         date(2025, 8, 15), date(2025, 11, 1), date(2025, 12, 8),
         date(2025, 12, 25), date(2025, 12, 26),
+        date(2026, 1, 1), date(2026, 1, 6), date(2026, 4, 6),
+        date(2026, 4, 25), date(2026, 5, 1), date(2026, 6, 2),
+        date(2026, 8, 15), date(2026, 11, 1), date(2026, 12, 8),
+        date(2026, 12, 25), date(2026, 12, 26),
     }
 
 

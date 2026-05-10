@@ -1,0 +1,40 @@
+{
+  "house": "New house (2nd dataset, all features)",
+  "period": "March 2026 (2026-03-01 to 2026-03-31)",
+  "train_period": "2024-12-09 to 2026-02-28",
+  "test_rows": 2976,
+  "best_iteration": 1143,
+  "features": 43,
+  "system_params": {
+    "P_BAT_MAX_kW": 10.0,
+    "P_GRID_MAX_kW": 20.0,
+    "C_BAT_kWh": 16.0,
+    "note": "P_BAT_MAX/P_GRID_MAX inferred from data p95; C_BAT from hackathon spec"
+  },
+  "forecast_metrics": {
+    "RMSE": 1.2977,
+    "MAE": 0.7896,
+    "NRMSE": 39.85
+  },
+  "controller": {
+    "baseline_a_bill_eur": -179.0758,
+    "baseline_b_bill_eur": -83.2317,
+    "lp_mpc_bill_eur": -138.2115,
+    "oracle_bill_eur": -149.1961,
+    "savings_vs_a_eur": -40.8643,
+    "savings_vs_a_pct": 22.82,
+    "savings_vs_b_eur": 54.9798,
+    "savings_vs_b_pct": -66.06,
+    "oracle_gap_eur": 10.9846,
+    "soc_start_pct": 50.0,
+    "soc_end_pct": 5.0
+  },
+  "energy_totals_kwh": {
+    "load": 2422.98,
+    "pv": 4039.44,
+    "import": 628.41,
+    "export": 2191.26,
+    "charge": 524.93,
+    "discharge": 479.26
+  }
+}
